@@ -1,42 +1,73 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Edit, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Edit, Trash2 } from "lucide-react";
 
 // Mock data (replace with API calls in production)
 const mockOrders = [
   { id: 1, clientName: "Client A", requiredEmployees: 5, status: "Pending" },
   { id: 2, clientName: "Client B", requiredEmployees: 3, status: "Fulfilled" },
   // Add more mock data as needed
-]
+];
 
-const statusOptions = ["Pending", "Fulfilled", "Cancelled"]
+const statusOptions = ["Pending", "Fulfilled", "Cancelled"];
 
 export default function Orders() {
-  const [orders, setOrders] = useState(mockOrders)
-  const [newOrder, setNewOrder] = useState({ clientName: "", requiredEmployees: 0, status: "" })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [orders, setOrders] = useState(mockOrders);
+  const [newOrder, setNewOrder] = useState({
+    clientName: "",
+    requiredEmployees: 0,
+    status: "",
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     // Fetch orders from API here
     // setOrders(fetchedOrders)
-  }, [])
+  }, []);
 
   const handleAddOrder = () => {
-    setOrders([...orders, { id: orders.length + 1, ...newOrder }])
-    setNewOrder({ clientName: "", requiredEmployees: 0, status: "" })
-    setIsDialogOpen(false)
-  }
+    setOrders([...orders, { id: orders.length + 1, ...newOrder }]);
+    setNewOrder({ clientName: "", requiredEmployees: 0, status: "" });
+    setIsDialogOpen(false);
+  };
 
   const handleDeleteOrder = (id: number) => {
-    setOrders(orders.filter((order) => order.id !== id))
-  }
+    setOrders(orders.filter((order) => order.id !== id));
+  };
+
+  const handleStatusChange = (id: number, newStatus: string) => {
+    setOrders(
+      orders.map((order) =>
+        order.id === id ? { ...order, status: newStatus } : order
+      )
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -56,7 +87,9 @@ export default function Orders() {
                 <Input
                   id="clientName"
                   value={newOrder.clientName}
-                  onChange={(e) => setNewOrder({ ...newOrder, clientName: e.target.value })}
+                  onChange={(e) =>
+                    setNewOrder({ ...newOrder, clientName: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -65,12 +98,22 @@ export default function Orders() {
                   id="requiredEmployees"
                   type="number"
                   value={newOrder.requiredEmployees}
-                  onChange={(e) => setNewOrder({ ...newOrder, requiredEmployees: Number.parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setNewOrder({
+                      ...newOrder,
+                      requiredEmployees: Number.parseInt(e.target.value),
+                    })
+                  }
                 />
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={newOrder.status} onValueChange={(value) => setNewOrder({ ...newOrder, status: value })}>
+                <Select
+                  value={newOrder.status}
+                  onValueChange={(value) =>
+                    setNewOrder({ ...newOrder, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -105,7 +148,10 @@ export default function Orders() {
               <TableCell>{order.clientName}</TableCell>
               <TableCell>{order.requiredEmployees}</TableCell>
               <TableCell>
-                <Select defaultValue={order.status}>
+                <Select
+                  value={order.status}
+                  onValueChange={(value) => handleStatusChange(order.id, value)}
+                >
                   <SelectTrigger>
                     <SelectValue>{order.status}</SelectValue>
                   </SelectTrigger>
@@ -123,7 +169,11 @@ export default function Orders() {
                   <Button variant="outline" size="icon">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="destructive" size="icon" onClick={() => handleDeleteOrder(order.id)}>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDeleteOrder(order.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -133,6 +183,5 @@ export default function Orders() {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
-
