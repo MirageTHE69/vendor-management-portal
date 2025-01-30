@@ -17,7 +17,7 @@ export function TopNav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl font-semibold">
-            <span className="rounded-full bg-gray-200 px-4 py-2">VendorHub</span>
+            <span className="rounded-full bg-gray-200 px-4 py-2 urbanist-700">VendorHub</span>
           </Link>
           <div className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => (
