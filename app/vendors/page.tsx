@@ -1,66 +1,149 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Pencil, Save, X } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react";
+import {
+  createVendor,
+  getVendors,
+  updateVendor,
+  deleteVendor,
+} from "@/app/services/vendorApi";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Edit, Pencil, Save, Trash2, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-const statusOptions = ["Active", "Pending"]
-
-const initialVendors = [
-  { id: 1, name: "TechCorp Solutions", type: "IT Services", employees: 45, status: "Active" },
-  { id: 2, name: "DataSys Inc", type: "Data Analytics", employees: 32, status: "Active" },
-  { id: 3, name: "CloudNet Services", type: "Cloud Solutions", employees: 28, status: "Active" },
-  { id: 4, name: "SecureIT Pro", type: "Cybersecurity", employees: 15, status: "Pending" },
-  { id: 5, name: "DevOps Masters", type: "Development", employees: 38, status: "Active" },
-]
+const statusOptions = ["Pending", "Active"];
 
 export default function VendorsPage() {
-  const [vendors, setVendors] = useState(initialVendors)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editForm, setEditForm] = useState<{ name?: string, type?: string, employees?: number, status?: string }>({})
-  const [newVendorForm, setNewVendorForm] = useState<{ name: string, type: string, employees: number, status: string }>({
-    name: "",
+  const [vendors, setVendors] = useState([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{
+    vendorName: string;
+    type: string;
+    employees: number;
+    status: string;
+  }>({
+    vendorName: "",
     type: "",
     employees: 0,
-    status: "Active",
-  })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+    status: "Pending",
+  });
+  const [newVendorForm, setNewVendorForm] = useState<{
+    vendorName: string;
+    type: string;
+    employees: number;
+    status: string;
+  }>({
+    vendorName: "",
+    type: "",
+    employees: 0,
+    status: "Pending",
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Fetch vendors on page load
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const fetchedVendors = await getVendors();
+        setVendors(fetchedVendors);
+      } catch (error) {
+        console.error("Error fetching vendors:", error);
+      }
+    };
+
+    fetchVendors();
+  }, []);
 
   const handleEdit = (vendor) => {
-    setEditingId(vendor.id)
-    setEditForm(vendor)
-  }
+    setEditingId(vendor._id);
+    setEditForm({
+      vendorName: vendor.vendorName,
+      type: vendor.type,
+      employees: vendor.employees,
+      status: vendor.status,
+    });
+  };
 
-  const handleSave = () => {
-    setVendors(vendors.map((v) => (v.id === editingId ? { ...v, ...editForm } : v)))
-    setEditingId(null)
-  }
+  const handleSave = async () => {
+    try {
+      const updatedVendor = await updateVendor(editingId, editForm);
+      setVendors(vendors.map((v) => (v._id === editingId ? updatedVendor : v)));
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating vendor:", error);
+    }
+  };
 
   const handleCancel = () => {
-    setEditingId(null)
-  }
+    setEditingId(null);
+  };
 
-  const handleStatusChange = (id: number, newStatus: string) => {
-    setVendors((prevVendors) =>
-      prevVendors.map((vendor) =>
-        vendor.id === id ? { ...vendor, status: newStatus } : vendor
-      )
-    )
-  }
+  const handleAddVendor = async () => {
+    try {
+      // Create the vendor data object
+      const vendorData = {
+        vendorName: newVendorForm.vendorName.trim(),
+        type: newVendorForm.type.trim(),
+        employees: Number(newVendorForm.employees),
+        status: newVendorForm.status || "Pending",
+      };
 
-  const handleAddVendor = () => {
-    const newVendor = { ...newVendorForm, id: vendors.length + 1 }
-    setVendors((prevVendors) => [...prevVendors, newVendor])
-    setNewVendorForm({ name: "", type: "", employees: 0, status: "Active" })
-    setIsDialogOpen(false)
-  }
+      const newVendor = await createVendor(vendorData);
+      console.log("Successfully created vendor:", newVendor); // Add this log
+
+      setVendors((prevVendors) => [...prevVendors, newVendor]);
+      setNewVendorForm({
+        vendorName: "",
+        type: "",
+        employees: 0,
+        status: "Pending",
+      });
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Full error object:", error);
+      console.error("Error response data:", error.response?.data);
+      alert(
+        `Failed to add vendor: ${
+          error.response?.data?.message || "Please check all fields"
+        }`
+      );
+    }
+  };
+
+  const handleDeleteVendor = async (id) => {
+    try {
+      await deleteVendor(id);
+      setVendors(vendors.filter((vendor) => vendor._id !== id));
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -81,8 +164,13 @@ export default function VendorsPage() {
                 <Input
                   id="vendor-name"
                   placeholder="Vendor Name"
-                  value={newVendorForm.name}
-                  onChange={(e) => setNewVendorForm({ ...newVendorForm, name: e.target.value })}
+                  value={newVendorForm.vendorName}
+                  onChange={(e) =>
+                    setNewVendorForm({
+                      ...newVendorForm,
+                      vendorName: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -91,7 +179,9 @@ export default function VendorsPage() {
                   id="vendor-type"
                   placeholder="Vendor Type"
                   value={newVendorForm.type}
-                  onChange={(e) => setNewVendorForm({ ...newVendorForm, type: e.target.value })}
+                  onChange={(e) =>
+                    setNewVendorForm({ ...newVendorForm, type: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -101,7 +191,12 @@ export default function VendorsPage() {
                   type="number"
                   placeholder="Number of Employees"
                   value={newVendorForm.employees}
-                  onChange={(e) => setNewVendorForm({ ...newVendorForm, employees: +e.target.value })}
+                  onChange={(e) =>
+                    setNewVendorForm({
+                      ...newVendorForm,
+                      employees: +e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -109,7 +204,9 @@ export default function VendorsPage() {
                 <Select
                   id="vendor-status"
                   value={newVendorForm.status}
-                  onValueChange={(value) => setNewVendorForm({ ...newVendorForm, status: value })}
+                  onValueChange={(value) =>
+                    setNewVendorForm({ ...newVendorForm, status: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue>{newVendorForm.status}</SelectValue>
@@ -126,9 +223,7 @@ export default function VendorsPage() {
             </div>
 
             <DialogFooter>
-              <Button onClick={handleAddVendor}>
-                Add Vendor
-              </Button>
+              <Button onClick={handleAddVendor}>Add Vendor</Button>
               <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
@@ -154,52 +249,68 @@ export default function VendorsPage() {
             </TableHeader>
             <TableBody>
               {vendors.map((vendor) => (
-                <TableRow key={vendor.id}>
+                <TableRow key={vendor._id}>
                   <TableCell>
-                    {editingId === vendor.id ? (
+                    {editingId === vendor._id ? (
                       <Input
-                        name="name"
-                        value={editForm.name || vendor.name}
-                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        value={editForm.vendorName}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            vendorName: e.target.value,
+                          })
+                        }
                       />
                     ) : (
-                      vendor.name
+                      vendor.vendorName
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingId === vendor.id ? (
+                    {editingId === vendor._id ? (
                       <Input
                         name="type"
-                        value={editForm.type || vendor.type}
-                        onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                        value={
+                          editForm.type !== undefined
+                            ? editForm.type
+                            : vendor.type
+                        }
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, type: e.target.value })
+                        }
                       />
                     ) : (
                       vendor.type
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingId === vendor.id ? (
+                    {editingId === vendor._id ? (
                       <Input
                         name="employees"
                         type="number"
                         value={editForm.employees || vendor.employees}
-                        onChange={(e) => setEditForm({ ...editForm, employees: +e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            employees: +e.target.value,
+                          })
+                        }
                       />
                     ) : (
                       vendor.employees
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingId === vendor.id ? (
+                    {editingId === vendor._id ? (
                       <Select
                         value={editForm.status || vendor.status}
                         onValueChange={(value) => {
-                          setEditForm({ ...editForm, status: value })
-                          handleStatusChange(vendor.id, value)
+                          setEditForm({ ...editForm, status: value });
                         }}
                       >
                         <SelectTrigger>
-                          <SelectValue>{editForm.status || vendor.status}</SelectValue>
+                          <SelectValue>
+                            {editForm.status || vendor.status}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {statusOptions.map((status) => (
@@ -210,23 +321,46 @@ export default function VendorsPage() {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge variant={vendor.status === "Active" ? "default" : "secondary"}>{vendor.status}</Badge>
+                      <Badge
+                        variant={
+                          vendor.status === "Active" ? "default" : "secondary"
+                        }
+                      >
+                        {vendor.status}
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingId === vendor.id ? (
+                    {editingId === vendor._id ? (
                       <>
                         <Button size="sm" onClick={handleSave}>
                           <Save className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={handleCancel}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancel}
+                        >
                           <X className="h-4 w-4" />
                         </Button>
                       </>
                     ) : (
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(vendor)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => handleEdit(vendor)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleDeleteVendor(vendor._id)}
+                        >
+                          <Trash2 className="h-4 w-4" /> 
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -236,5 +370,5 @@ export default function VendorsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
