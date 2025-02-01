@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Save, X } from "lucide-react";
+import { Edit, Pencil, Save, Trash2, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -103,9 +103,18 @@ export default function CurrentWorkPage() {
   const handleAddProject = () => {
     setWork([
       ...work,
-      { id: work.length + 1, ...newProject, completion: Number(newProject.completion) },
+      {
+        id: work.length + 1,
+        ...newProject,
+        completion: Number(newProject.completion),
+      },
     ]);
-    setNewProject({ project: "", vendor: "", status: "Planning", completion: 0 });
+    setNewProject({
+      project: "",
+      vendor: "",
+      status: "Planning",
+      completion: 0,
+    });
     setIsDialogOpen(false);
   };
 
@@ -274,13 +283,18 @@ export default function CurrentWorkPage() {
                         </Button>
                       </>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
